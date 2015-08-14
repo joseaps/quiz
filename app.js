@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 var partials = require('express-partials');
 var methodOverride = require('method-override');
 var session = require('express-session');
+var moment = require('moment');
 
 var routes = require('./routes/index');
 var app = express();
@@ -26,9 +27,21 @@ app.use(session());
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Helpers dinámicos
-app.use(function(req, res, next) {
 
+app.use(function(req, res, next) {
+	if (req.session.time) {
+		if (moment().subtract(2, 'minutes').isAfter(req.session.time)) {
+			if (req.session.user) {
+				delete req.session.user
+			}
+		}
+	}
+	req.session.time = moment();
+	next();
+});
+
+// Helpers dinámicos
+app.use(function(req, res, next) {	
 	// guardar path en session.redir para después de login
 	if (!req.path.match(/\/login|\/logout/)) {
 		req.session.redir = req.path;
